@@ -24,15 +24,12 @@
 </head>
 <body>
 
-<!-- Container for Donut Charts -->
 <div id="donut-container">
-  <!-- Each chart will be appended here -->
 </div>
 
 <script>
   // Load data from CSV
   d3.csv('Crash_Reporting_-_Drivers_Data.csv').then(data => {
-    // Your data preprocessing logic goes here
 
     // Function to generate data for a specific column
     function generateChartData(columnName) {
@@ -44,19 +41,14 @@
       }));
     }
 
-    // Example data for driver fault
     const driverFaultData = generateChartData('Driver At Fault');
 
-    // Example data for severity
     const severityData = generateChartData('Injury Severity');
 
-    // Example data for vehicle damage extent
     const damageExtentData = generateChartData('Vehicle Damage Extent');
 
-    // Example data for light conditions
     const lightConditionsData = generateChartData('Light');
     
-    // Function to create donut chart
     function createDonutChart(data, containerId, chartTitle) {
       const radius = 130;
       const color = d3.scaleOrdinal(d3.schemeCategory10);
@@ -70,13 +62,11 @@
         .append('g')
         .attr('transform', `translate(${radius},${radius})`);
 
-      // Title
       svg.append('text')
         .attr('class', 'chart-title')
         .attr('text-anchor', 'middle')
         .text(chartTitle);
 
-      // Arcs
       const arcs = svg.selectAll('arc')
         .data(pie(data))
         .enter()
@@ -87,7 +77,6 @@
         .attr('d', arc)
         .attr('fill', (d, i) => color(i));
 
-      // Legend
       const legend = svg.selectAll('.legend')
         .data(data)
         .enter()
