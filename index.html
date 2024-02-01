@@ -3,110 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crash Data Donut Charts</title>
+  <title>Albanian Songs Charts</title>
   <script src="https://d3js.org/d3.v5.min.js"></script>
-  <style>
-    .donut-chart {
-      width: 600px;
-      height: 300px;
-    }
-    text {
-      font-size: 14px;
-    }
-    #donut-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin: 50px 0px;
-    }
-  </style>
+  <link rel="stylesheet" href="./stylesheets/main.css">
 </head>
 <body>
 
-<div id="donut-container">
-</div>
+<div class="donut-general-charts" id="explicit-chart"></div>
+<div class="donut-general-charts" id="popularity-chart"></div>
 
-<script>
-  // Load data from CSV
-  d3.csv('Crash_Reporting_-_Drivers_Data.csv').then(data => {
+<div id="bar-chart"></div>
 
-    // Function to generate data for a specific column
-    function generateChartData(columnName) {
-      const validData = data.filter(d => d[columnName] !== 'N/A');
-      const uniqueLabels = Array.from(new Set(validData.map(d => d[columnName])));
-      return uniqueLabels.map(label => ({
-        label: label,
-        count: validData.filter(d => d[columnName] === label).length,
-      }));
-    }
-
-    const driverFaultData = generateChartData('Driver At Fault');
-
-    const severityData = generateChartData('Injury Severity');
-
-    const damageExtentData = generateChartData('Vehicle Damage Extent');
-
-    const lightConditionsData = generateChartData('Light');
-    
-    function createDonutChart(data, containerId, chartTitle) {
-      const radius = 130;
-      const color = d3.scaleOrdinal(d3.schemeCategory10);
-
-      const pie = d3.pie().value(d => d.count);
-      const arc = d3.arc().innerRadius(radius - 50).outerRadius(radius);
-
-      const svg = d3.select(`#${containerId}`)
-        .append('svg')
-        .attr('class', 'donut-chart')
-        .append('g')
-        .attr('transform', `translate(${radius},${radius})`);
-
-      svg.append('text')
-        .attr('class', 'chart-title')
-        .attr('text-anchor', 'middle')
-        .text(chartTitle);
-
-      const arcs = svg.selectAll('arc')
-        .data(pie(data))
-        .enter()
-        .append('g')
-        .attr('class', 'arc');
-
-      arcs.append('path')
-        .attr('d', arc)
-        .attr('fill', (d, i) => color(i));
-
-      const legend = svg.selectAll('.legend')
-        .data(data)
-        .enter()
-        .append('g')
-        .attr('class', 'legend')
-        .attr('transform', (d, i) => `translate(0,${i * 20})`);
-
-      legend.append('rect')
-        .attr('x', radius + 10)
-        .attr('width', 15)
-        .attr('height', 15)
-        .style('fill', (d, i) => color(i));
-
-      legend.append('text')
-        .attr('x', radius + 35)
-        .attr('y', 9)
-        .attr('dy', '.35em')
-        .style('text-anchor', 'start')
-        .text(d => `${d.label} (${d.count})`);
-    }
-
-    // Create Donut Charts
-    createDonutChart(driverFaultData, 'donut-container', 'Driver Fault');
-    createDonutChart(severityData, 'donut-container', 'Injury Severity');
-    createDonutChart(damageExtentData, 'donut-container', 'Vehicle Damage Extent');
-    createDonutChart(lightConditionsData, 'donut-container', 'Light Conditions');
-
-  }).catch(error => {
-    console.error('Error loading CSV:', error);
-  });
-</script>
+<script type="module" src="./src/main.js"></script>
 </body>
 </html>
