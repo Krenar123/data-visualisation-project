@@ -15,13 +15,13 @@
 
     <ul class="nav nav-tabs d-flex justify-content-center">
       <li class="nav-item">
-        <a class="nav-link active" aria-current="page" href="#">Popularity</a>
+        <a class="nav-link active" id="popularity" aria-current="page" href="#">Popularity</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#">Artists</a>
+        <a class="nav-link" id="artists" href="#">Artists</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#">Energy</a>
+        <a class="nav-link" id="energy" href="#">Energy</a>
       </li>
     </ul>
   </header>
@@ -30,29 +30,55 @@
     <div id="popularity-charts">
       <p class="chart-title">Explore the Distribution of Explicit and Non-Explicit Songs Based on Count</p>
       <div class="donut-general-charts chart" id="explicit-chart"></div>
-      <p class="chart-title">Popularity Comparison between Explicit and Non-Explicit Songs</p>
-      <div class="donut-general-charts chart" id="popularity-chart"></div>
-
       <p class="chart-title">Explicit and Non-Explicit Song Distribution by Count Over the Years</p>
       <div class="chart" id="line-chart"></div>
+      <hr />
+
+      <p class="chart-title">Popularity Comparison between Explicit and Non-Explicit Songs</p>
+      <div class="donut-general-charts chart" id="popularity-chart"></div>
       <p class="chart-title">Comparative Analysis of Explicit Song Popularity Over the Years</p>
       <div class="chart" id="line-chart-popularity"></div>
     </div>
     <div>
-      
+
+    <div id="artists-charts">
+      <p class="chart-title">Distribution of Explicit Songs Across Artists</p>
       <div class="chart" id="bar-chart"></div>
+      <hr />
+      <p class="chart-title">Comparison of Explicit and Non-Explicit Songs Among Top 10 Artists by Popularity</p>
       <div class="chart" id="grouped-bar-chart"></div>
-
+    </div>
       
-
+    <div id="energy-charts">
+      <h6 class="text-center">Danceability</h6>
+      <p class="text-center">Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable.</p>
+      <p class="chart-title">Comparison of Danceability: Explicit vs. Non-Explicit Songs</p>
       <div class="chart" id="danceability-comparison-chart"></div>
-      <div class="chart" id="loudness-comparison-chart"></div>
-      <div class="chart" id="energy-comparison-chart"></div>
-      <div class="chart" id="valence-comparison-chart"></div>
-
+      <p class="chart-title">Analysis of Danceability: Explicit vs. Non-Explicit Songs Over Time</p>
       <div class="chart" id="danceability-line-chart-through-years"></div>
+      <hr />
+
+      <h6 class="text-center energy-nav-title">Loudness</h6>
+      <p class="text-center">The overall loudness of a track in decibels (dB). Loudness is the quality of a sound that is the primary psychological correlate of physical strength (amplitude). Values typically range between -60 and 0 db.</p>
+      <p class="chart-title">Comparison of Loudness: Explicit vs. Non-Explicit Songs</p>
+      <div class="chart" id="loudness-comparison-chart"></div>
+      <p class="chart-title">Analysis of Loudness: Explicit vs. Non-Explicit Songs Over Time</p>
       <div class="chart" id="loudness-line-chart-through-years"></div>
+      <hr />
+
+      <h6 class="text-center energy-nav-title">Energy</h6>
+      <p class="text-center">Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. For example, death metal has high energy, while a Bach prelude scores low on the scale. Perceptual features contributing to this attribute include dynamic range, perceived loudness, timbre, onset rate, and general entropy.</p>
+      <p class="chart-title">Comparison of Energy: Explicit vs. Non-Explicit Songs</p>
+      <div class="chart" id="energy-comparison-chart"></div>
+      <p class="chart-title">Analysis of Energy: Explicit vs. Non-Explicit Songs Over Time</p>
       <div class="chart" id="energy-line-chart-through-years"></div>
+      <hr />
+      
+      <h6 class="text-center energy-nav-title">Valence</h6>
+      <p class="text-center">A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. Tracks with high valence sound more positive (e.g. happy, cheerful, euphoric), while tracks with low valence sound more negative (e.g. sad, depressed, angry).</p>
+      <p class="chart-title">Comparison of Valence: Explicit vs. Non-Explicit Songs</p>
+      <div class="chart" id="valence-comparison-chart"></div>
+      <p class="chart-title">Analysis of Valence: Explicit vs. Non-Explicit Songs Over Time</p>
       <div class="chart" id="valence-line-chart-through-years"></div>
     </div>
   </section>

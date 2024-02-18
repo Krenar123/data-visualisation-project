@@ -31,12 +31,26 @@ header {
     margin-bottom: 15px;
 }
 
+
 .nav {
-    margin-top: 30px;
+    margin-top: 70px;
+    margin-bottom: 40px;
 }
 
 .chart-title {
     margin-top: 60px;
     text-align: center;
     font-weight: 500;
+}
+
+#artists-charts, #energy-charts {
+    display: none;
+}
+
+.container {
+    margin-bottom: 50px;
+}
+
+.energy-nav-title {
+    margin-top: 40px;
 }

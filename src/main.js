@@ -47,4 +47,34 @@ d3.csv('./data/albanian_songs.csv').then(data => {
     console.error('Error loading CSV:', error);
 });
 
+document.addEventListener("DOMContentLoaded", function() {
+    const tabs = document.querySelectorAll(".nav-link");
+    const popularityCharts = document.getElementById("popularity-charts");
+    const artistsCharts = document.getElementById("artists-charts");
+    const energyCharts = document.getElementById("energy-charts");
 
+    tabs.forEach(tab => {
+        tab.addEventListener("click", function(event) {
+            event.preventDefault();
+
+            
+            tabs.forEach(t => t.classList.remove("active"));
+            this.classList.add("active");
+
+            const tabId = tab.id;
+            if(tabId === "popularity"){
+                popularityCharts.style.display = 'block';
+                artistsCharts.style.display = 'none';
+                energyCharts.style.display = 'none';
+            }else if(tabId === "artists"){
+                popularityCharts.style.display = 'none';
+                artistsCharts.style.display = 'block';
+                energyCharts.style.display = 'none';
+            }else{
+                popularityCharts.style.display = 'none';
+                artistsCharts.style.display = 'none';
+                energyCharts.style.display = 'block';
+            }
+        });
+    });
+});

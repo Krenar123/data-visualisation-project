@@ -45,103 +45,83 @@ export function createPieChart(data, containerId, chartTitle) {
         .text(chartTitle);
 };
 
-export function createBarChartsForArtistsCensoredSongs(data){
+export function createBarChartsForArtistsCensoredSongs(data) {
     // Assuming your data is loaded into the 'data' variable
 
-// Extract relevant data
-const artists = [...new Set(data.map(d => d.Artist))];
-const artistData = artists.map(artist => {
-    const songs = data.filter(d => d.Artist === artist);
-    const explicitSongs = songs.filter(d => d.Explicit === 'True');
-    const unexplicitSongs = songs.filter(d => d.Explicit === 'False');
-    const explicitSongsLength = explicitSongs.length > 0 ? explicitSongs.length : 0;
-    const unexplicitSongsLength = unexplicitSongs.length > 0 ? unexplicitSongs.length : 0;
-    const totalSongsLength = explicitSongsLength + unexplicitSongsLength;
-    //const explicitMeanPopularity = explicitSongs.length > 0 ? d3.mean(explicitSongs, d => +d.Popularity) : 0;
-    //const unexplicitMeanPopularity = unexplicitSongs d3.mean(unexplicitSongs, d => +d.Popularity) : 0;
-    //const totalMeanPopularity = explicitMeanPopularity + unexplicitMeanPopularity;
-    //const explicitMeanPopularityPercentage = (explicitMeanPopularity / totalMeanPopularity) * 100;
-    //const unexplicitMeanPopularityPercentage = (unexplicitMeanPopularity / totalMeanPopularity) * 100;
-    return {
-        artist,
-        explicitSongsLength,
-        unexplicitSongsLength,
-        totalSongsLength
-    };
-});
+    
+    const artists = [...new Set(data.map(d => d.Artist))];
+    const artistData = artists.map(artist => {
+        const songs = data.filter(d => d.Artist === artist);
+        const explicitSongs = songs.filter(d => d.Explicit === 'True');
+        const unexplicitSongs = songs.filter(d => d.Explicit === 'False');
+        const explicitSongsLength = explicitSongs.length > 0 ? explicitSongs.length : 0;
+        const unexplicitSongsLength = unexplicitSongs.length > 0 ? unexplicitSongs.length : 0;
+        const totalSongsLength = explicitSongsLength + unexplicitSongsLength;
+        return {
+            artist,
+            explicitSongsLength,
+            unexplicitSongsLength,
+            totalSongsLength
+        };
+    });
 
-// Sort data by mean popularity
-artistData.sort((a, b) => b.explicitSongsLength - a.explicitSongsLength);
+    // Sort data by mean popularity
+    artistData.sort((a, b) => b.explicitSongsLength - a.explicitSongsLength);
 
+    
+    const margin = { top: 20, right: 30, bottom: 70, left: 115 };
+    const width = 1000 - margin.left - margin.right;
+    const height = 850 - margin.top - margin.bottom;
 
-// Set up the dimensions of the chart
-const margin = { top: 20, right: 30, bottom: 70, left: 60 };
-const width = 1000 - margin.left - margin.right;
-const height = 600 - margin.top - margin.bottom;
+    
+    const svg = d3.select("#bar-chart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
 
-// Create SVG container
-const svg = d3.select("#bar-chart")
-    .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
+    
+    const y = d3.scaleBand()
+        .domain(artistData.map(d => d.artist))
+        .range([0, height])
+        .padding(0.1);
 
-// Set up scales
-const x = d3.scaleBand()
-    .domain(artistData.map(d => d.artist))
-    .range([0, width])
-    .padding(0.1);
+    const x = d3.scaleLinear()
+        .domain([0, d3.max(artistData, d => Math.max(d.explicitSongsLength, d.unexplicitSongsLength))])
+        .range([0, width]);
 
-const y = d3.scaleLinear()
-    .domain([0, d3.max(artistData, d => Math.max(d.explicitSongsLength, d.unexplicitSongsLength))])
-    .range([height, 0]);
+    
+    svg.selectAll(".bar-explicit")
+        .data(artistData)
+        .enter().append("rect")
+        .attr("class", "bar-explicit")
+        .attr("y", d => y(d.artist))
+        .attr("height", y.bandwidth())
+        .attr("x", 0)
+        .attr("width", d => x(d.explicitSongsLength))
+        .attr("fill", "#FF4E50");
 
-// Draw bars for explicit
-svg.selectAll(".bar-explicit")
-    .data(artistData)
-    .enter().append("rect")
-    .attr("class", "bar-explicit")
-    .attr("x", d => x(d.artist))
-    .attr("width", x.bandwidth())
-    .attr("y", d => y(d.explicitSongsLength))
-    .attr("height", d => height - y(d.explicitSongsLength))
-    .attr("fill", "#FF4E50");
+    
+    svg.append("g")
+        .call(d3.axisLeft(y));
 
+    
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x));
 
-// Draw x-axis
-svg.append("g")
-    .attr("transform", `translate(0,${height})`)
-    .call(d3.axisBottom(x))
-    .selectAll("text")
-    .style("text-anchor", "end")
-    .attr("dx", "-.8em")
-    .attr("dy", ".15em")
-    .attr("transform", "rotate(-45)");
-
-// Draw y-axis
-svg.append("g")
-    .call(d3.axisLeft(y));
-
-// Add labels
-svg.append("text")
-    .attr("x", width / 2)
-    .attr("y", height + margin.bottom - 10)
-    .style("text-anchor", "middle")
-    .text("Artist");
-
-svg.append("text")
-    .attr("transform", "rotate(-90)")
-    .attr("x", 0 - height / 2)
-    .attr("y", 0 - margin.left)
-    .attr("dy", "1em")
-    .style("text-anchor", "middle")
-    .text("Total Number of Explicit Songs");
-
+    
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height + margin.bottom - 10)
+        .style("text-anchor", "middle")
+        .text("Total Number of Explicit Songs");
 }
 
+
 export function createGroupedBarChartsForTopArtists(data) {
-    // Extract relevant data
+    
     const artists = [...new Set(data.map(d => d.Artist))];
     
     // Calculate total songs length for each artist
@@ -169,12 +149,12 @@ export function createGroupedBarChartsForTopArtists(data) {
 
     //console.log(topArtists);
 
-    // Set up the dimensions of the chart
-    const margin = { top: 20, right: 30, bottom: 70, left: 60 };
-    const width = 1400 - margin.left - margin.right;
+    
+    const margin = { top: 15, right: 30, bottom: 70, left: 60 };
+    const width = 800 - margin.left - margin.right;
     const height = 500 - margin.top - margin.bottom;
 
-    // Create SVG container
+    
     const svg = d3.select("#grouped-bar-chart")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -182,7 +162,7 @@ export function createGroupedBarChartsForTopArtists(data) {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Set up scales
+    
     const x = d3.scaleBand()
         .domain(topArtists.map(d => d.artist))
         .range([0, width])
@@ -192,29 +172,29 @@ export function createGroupedBarChartsForTopArtists(data) {
         .domain([0, d3.max(topArtists, d => Math.max(d.totalExplicitLength, d.totalUnexplicitLength))])
         .range([height, 0]);
 
-    // Draw bars for explicit
+    
     svg.selectAll(".bar-explicit")
         .data(topArtists)
         .enter().append("rect")
         .attr("class", "bar-explicit")
         .attr("x", d => x(d.artist))
-        .attr("width", x.bandwidth() / 2)  // Adjust width for grouped bars
+        .attr("width", x.bandwidth() / 2)
         .attr("y", d => y(d.totalExplicitLength))
         .attr("height", d => height - y(d.totalExplicitLength))
         .attr("fill", "#FF4E50");
 
-    // Draw bars for unexplicit
+    
     svg.selectAll(".bar-unexplicit")
         .data(topArtists)
         .enter().append("rect")
         .attr("class", "bar-unexplicit")
-        .attr("x", d => x(d.artist) + x.bandwidth() / 2)  // Adjust x-position for grouped bars
-        .attr("width", x.bandwidth() / 2)  // Adjust width for grouped bars
+        .attr("x", d => x(d.artist) + x.bandwidth() / 2)
+        .attr("width", x.bandwidth() / 2)
         .attr("y", d => y(d.totalUnexplicitLength))
         .attr("height", d => height - y(d.totalUnexplicitLength))
         .attr("fill", "#83AF9B");
 
-    // Draw x-axis
+    
     svg.append("g")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(x))
@@ -224,16 +204,10 @@ export function createGroupedBarChartsForTopArtists(data) {
         .attr("dy", ".15em")
         .attr("transform", "rotate(-45)");
 
-    // Draw y-axis
+    
     svg.append("g")
         .call(d3.axisLeft(y));
 
-    // Add labels
-    svg.append("text")
-        .attr("x", width / 2)
-        .attr("y", height + margin.bottom - 10)
-        .style("text-anchor", "middle")
-        .text("Artist");
 
     svg.append("text")
         .attr("transform", "rotate(-90)")
@@ -245,12 +219,12 @@ export function createGroupedBarChartsForTopArtists(data) {
 }
 
 export function createLineChartForSongsOverYears(data) {
-    // Set up the dimensions of the chart
+    
     const margin = { top: 20, right: 30, bottom: 70, left: 60 };
     const width = 800 - margin.left - margin.right;
     const height = 400 - margin.top - margin.bottom;
 
-    // Create SVG container
+    
     const svg = d3.select("#line-chart")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -258,7 +232,7 @@ export function createLineChartForSongsOverYears(data) {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Extract relevant data
+    
     let years = [...new Set(data.map(d => d.Year))];
     years = years.sort(); // Sort the years
 
@@ -273,7 +247,7 @@ export function createLineChartForSongsOverYears(data) {
         return { year, count: unexplicitSongs.length };
     });
 
-    // Set up scales
+    
     const x = d3.scaleBand()
         .domain(years)
         .range([0, width])
@@ -283,7 +257,7 @@ export function createLineChartForSongsOverYears(data) {
         .domain([0, d3.max([...explicitCounts, ...unexplicitCounts], d => d.count)])
         .range([height, 0]);
 
-    // Draw lines for explicit songs
+    
     const explicitLine = d3.line()
         .x(d => x(d.year))
         .y(d => y(d.count));
@@ -295,7 +269,7 @@ export function createLineChartForSongsOverYears(data) {
         .attr("fill", "none")
         .attr("stroke", "#FF4E50");
 
-    // Draw lines for non-explicit songs
+    
     const unexplicitLine = d3.line()
         .x(d => x(d.year))
         .y(d => y(d.count));
@@ -307,7 +281,7 @@ export function createLineChartForSongsOverYears(data) {
         .attr("fill", "none")
         .attr("stroke", "#83AF9B");
 
-    // Draw x-axis
+    
     svg.append("g")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(x))
@@ -317,11 +291,11 @@ export function createLineChartForSongsOverYears(data) {
         .attr("dy", ".15em")
         .attr("transform", "rotate(-45)");
 
-    // Draw y-axis
+    
     svg.append("g")
         .call(d3.axisLeft(y));
 
-    // Add labels
+    
     svg.append("text")
         .attr("x", width / 2)
         .attr("y", height + margin.bottom - 10)
@@ -336,7 +310,7 @@ export function createLineChartForSongsOverYears(data) {
         .style("text-anchor", "middle")
         .text("Number of Songs");
 
-    // Add legend
+    
     svg.append("text")
         .attr("x", width - 20)
         .attr("y", 20)
@@ -355,12 +329,12 @@ export function createLineChartForSongsOverYears(data) {
 }
 
 export function createLineChartForExplicitPercentageOverYears(data) {
-    // Set up the dimensions of the chart
+    
     const margin = { top: 20, right: 30, bottom: 70, left: 60 };
     const width = 800 - margin.left - margin.right;
     const height = 400 - margin.top - margin.bottom;
 
-    // Create SVG container
+    
     const svg = d3.select("#line-chart-popularity")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -368,7 +342,7 @@ export function createLineChartForExplicitPercentageOverYears(data) {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Extract relevant data
+    
     let years = [...new Set(data.map(d => d.Year))];
     years = years.sort(); // Sort the years
 
@@ -403,7 +377,7 @@ export function createLineChartForExplicitPercentageOverYears(data) {
 
     //console.log(percentageData);
 
-    // Set up scales
+    
     const x = d3.scaleBand()
         .domain(years)
         .range([0, width])
@@ -413,7 +387,7 @@ export function createLineChartForExplicitPercentageOverYears(data) {
         .domain([0, d3.max(percentageData, d => d.percentage)])
         .range([height, 0]);
 
-    // Draw line for the percentage of explicit songs' popularity
+    
     const percentageLine = d3.line()
         .x(d => x(d.year))
         .y(d => y(d.percentage));
@@ -425,7 +399,7 @@ export function createLineChartForExplicitPercentageOverYears(data) {
         .attr("fill", "none")
         .attr("stroke", "#FF4E50");
 
-    // Draw x-axis
+    
     svg.append("g")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(x))
@@ -435,11 +409,11 @@ export function createLineChartForExplicitPercentageOverYears(data) {
         .attr("dy", ".15em")
         .attr("transform", "rotate(-45)");
 
-    // Draw y-axis
+    
     svg.append("g")
         .call(d3.axisLeft(y));
 
-    // Add labels
+    
     svg.append("text")
         .attr("x", width / 2)
         .attr("y", height + margin.bottom - 10)
@@ -454,7 +428,7 @@ export function createLineChartForExplicitPercentageOverYears(data) {
         .style("text-anchor", "middle")
         .text("Percentage of Explicit Songs' Popularity");
 
-    // Add legend
+    
     svg.append("text")
         .attr("x", width - 20)
         .attr("y", 20)
@@ -465,7 +439,7 @@ export function createLineChartForExplicitPercentageOverYears(data) {
 }
 
 export function createGroupedBarChartsForFeaturesComparison(data, feature) {
-    // Extract relevant data
+    
     const explicitSongs = data.filter(d => d.Explicit === 'True');
     const unexplicitSongs = data.filter(d => d.Explicit === 'False');
 
@@ -473,12 +447,12 @@ export function createGroupedBarChartsForFeaturesComparison(data, feature) {
     const explicitMean = explicitSongs.length > 0 ? d3.mean(explicitSongs, d => +d[feature]) : 0;
     const unexplicitMean = unexplicitSongs.length > 0 ? d3.mean(unexplicitSongs, d => +d[feature]) : 0;
 
-    // Set up the dimensions of the chart
+    
     const margin = { top: 20, right: 30, bottom: 70, left: 60 };
     const width = 800 - margin.left - margin.right;
     const height = 400 - margin.top - margin.bottom;
 
-    // Create SVG container
+    
     const svg = d3.select(`#${feature.toLowerCase()}-comparison-chart`)
         .append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -486,7 +460,7 @@ export function createGroupedBarChartsForFeaturesComparison(data, feature) {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Set up scales
+    
     const x = d3.scaleBand()
         .domain(["Explicit", "Non-Explicit"])
         .range([0, width])
@@ -496,7 +470,7 @@ export function createGroupedBarChartsForFeaturesComparison(data, feature) {
         .domain([0, d3.max([explicitMean, unexplicitMean])])
         .range([height, 0]);
 
-    // Draw bars for mean values
+    
     svg.selectAll(".bar")
         .data([explicitMean, unexplicitMean])
         .enter().append("rect")
@@ -507,16 +481,16 @@ export function createGroupedBarChartsForFeaturesComparison(data, feature) {
         .attr("height", d => height - y(d))
         .attr("fill", (d, i) => (i === 0 ? "#FF4E50" : "#83AF9B"));
 
-    // Draw x-axis
+    
     svg.append("g")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(x));
 
-    // Draw y-axis
+    
     svg.append("g")
         .call(d3.axisLeft(y));
 
-    // Add labels
+    
     svg.append("text")
         .attr("x", width / 2)
         .attr("y", height + margin.bottom - 10)
@@ -533,12 +507,12 @@ export function createGroupedBarChartsForFeaturesComparison(data, feature) {
 }
 
 export function createLineChartForFeatureThroughYears(data, feature) {
-    // Set up the dimensions of the chart
+    
     const margin = { top: 20, right: 30, bottom: 70, left: 60 };
     const width = 800 - margin.left - margin.right;
     const height = 400 - margin.top - margin.bottom;
 
-    // Create an SVG container
+    
     const svg = d3.select(`#${feature.toLowerCase()}-line-chart-through-years`)
         .append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -546,7 +520,7 @@ export function createLineChartForFeatureThroughYears(data, feature) {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Extract relevant data
+    
     let years = [...new Set(data.map(d => d.Year))];
     years = years.sort(); // Sort the years
 
@@ -569,7 +543,7 @@ export function createLineChartForFeatureThroughYears(data, feature) {
     console.log(explicitMeans);
     console.log(nonExplicitMeans);
 
-    // Set up scales
+    
     const x = d3.scaleBand()
         .domain(years)
         .range([0, width])
@@ -584,7 +558,7 @@ export function createLineChartForFeatureThroughYears(data, feature) {
             .range([height, 0]);
 
 
-    // Draw lines for explicit songs
+    
     const explicitLine = d3.line()
         .x(d => x(d.year))
         .y(d => y(d.mean));
@@ -596,7 +570,7 @@ export function createLineChartForFeatureThroughYears(data, feature) {
         .attr("fill", "none")
         .attr("stroke", "#FF4E50");
 
-    // Draw lines for non-explicit songs
+    
     const nonExplicitLine = d3.line()
         .x(d => x(d.year))
         .y(d => y(d.mean));
@@ -608,7 +582,7 @@ export function createLineChartForFeatureThroughYears(data, feature) {
         .attr("fill", "none")
         .attr("stroke", "#83AF9B");
 
-    // Draw x-axis
+    
     svg.append("g")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(x))
@@ -618,11 +592,11 @@ export function createLineChartForFeatureThroughYears(data, feature) {
         .attr("dy", ".15em")
         .attr("transform", "rotate(-45)");
 
-    // Draw y-axis
+    
     svg.append("g")
         .call(d3.axisLeft(y));
 
-    // Add labels
+    
     svg.append("text")
         .attr("x", width / 2)
         .attr("y", height + margin.bottom - 10)
@@ -637,7 +611,7 @@ export function createLineChartForFeatureThroughYears(data, feature) {
         .style("text-anchor", "middle")
         .text(`${feature} Mean Value`);
 
-    // Add legend
+    
     svg.append("text")
         .attr("x", width - 20)
         .attr("y", 20)
