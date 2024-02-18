@@ -6,14 +6,58 @@
   <title>Albanian Songs Charts</title>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <link rel="stylesheet" href="./stylesheets/main.css">
+  <link href="./node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
+  <header class="container flex">
+    <h1 class="title text-center">Explicit content in albanian music</h1>
+    <p class="subtitle text-center">This project is about Albanian music and artists. We want to show how many songs are not appropriate for all listeners and how many are okay. We used d3.js to make charts and graphs. We have data about 50 songs from 35 singers. We will look at each singer and see how many songs they have that are not appropriate. We hope to learn more about Albanian music and how much of it is not for everyone.</p>
 
-<div class="donut-general-charts" id="explicit-chart"></div>
-<div class="donut-general-charts" id="popularity-chart"></div>
+    <ul class="nav nav-tabs d-flex justify-content-center">
+      <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="#">Popularity</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Artists</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Energy</a>
+      </li>
+    </ul>
+  </header>
 
-<div id="bar-chart"></div>
+  <section class="container">
+    <div id="popularity-charts">
+      <p class="chart-title">Explore the Distribution of Explicit and Non-Explicit Songs Based on Count</p>
+      <div class="donut-general-charts chart" id="explicit-chart"></div>
+      <p class="chart-title">Popularity Comparison between Explicit and Non-Explicit Songs</p>
+      <div class="donut-general-charts chart" id="popularity-chart"></div>
 
-<script type="module" src="./src/main.js"></script>
+      <p class="chart-title">Explicit and Non-Explicit Song Distribution by Count Over the Years</p>
+      <div class="chart" id="line-chart"></div>
+      <p class="chart-title">Comparative Analysis of Explicit Song Popularity Over the Years</p>
+      <div class="chart" id="line-chart-popularity"></div>
+    </div>
+    <div>
+      
+      <div class="chart" id="bar-chart"></div>
+      <div class="chart" id="grouped-bar-chart"></div>
+
+      
+
+      <div class="chart" id="danceability-comparison-chart"></div>
+      <div class="chart" id="loudness-comparison-chart"></div>
+      <div class="chart" id="energy-comparison-chart"></div>
+      <div class="chart" id="valence-comparison-chart"></div>
+
+      <div class="chart" id="danceability-line-chart-through-years"></div>
+      <div class="chart" id="loudness-line-chart-through-years"></div>
+      <div class="chart" id="energy-line-chart-through-years"></div>
+      <div class="chart" id="valence-line-chart-through-years"></div>
+    </div>
+  </section>
+
+  <script type="module" src="./src/main.js"></script>
+  <script src="./node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

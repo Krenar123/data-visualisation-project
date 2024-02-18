@@ -4,7 +4,8 @@ export function createPieChart(data, containerId, chartTitle) {
     const height = 300;
     const radius = Math.min(width, height) / 2;
 
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
+    // Remove color scale
+    // const color = d3.scaleOrdinal(d3.schemeCategory10);
 
     const svg = d3.select(`#${containerId}`)
         .append('svg')
@@ -26,7 +27,8 @@ export function createPieChart(data, containerId, chartTitle) {
 
     arc.append('path')
         .attr('d', path)
-        .attr('fill', (d, i) => color(i));
+        // Use the specified colors
+        .attr('fill', (d, i) => i === 0 ? '#FF4E50' : '#83AF9B');
 
     arc.append('text')
         .attr('transform', d => `translate(${path.centroid(d)})`)
@@ -53,7 +55,7 @@ const artistData = artists.map(artist => {
     const explicitSongs = songs.filter(d => d.Explicit === 'True');
     const unexplicitSongs = songs.filter(d => d.Explicit === 'False');
     const explicitSongsLength = explicitSongs.length > 0 ? explicitSongs.length : 0;
-    const unexplicitSongsLength = unexplicitSongs.legnth > 0 ? unexplicitSongs.length : 0;
+    const unexplicitSongsLength = unexplicitSongs.length > 0 ? unexplicitSongs.length : 0;
     const totalSongsLength = explicitSongsLength + unexplicitSongsLength;
     //const explicitMeanPopularity = explicitSongs.length > 0 ? d3.mean(explicitSongs, d => +d.Popularity) : 0;
     //const unexplicitMeanPopularity = unexplicitSongs d3.mean(unexplicitSongs, d => +d.Popularity) : 0;
@@ -74,7 +76,7 @@ artistData.sort((a, b) => b.explicitSongsLength - a.explicitSongsLength);
 
 // Set up the dimensions of the chart
 const margin = { top: 20, right: 30, bottom: 70, left: 60 };
-const width = 1600 - margin.left - margin.right;
+const width = 1000 - margin.left - margin.right;
 const height = 600 - margin.top - margin.bottom;
 
 // Create SVG container
@@ -92,7 +94,7 @@ const x = d3.scaleBand()
     .padding(0.1);
 
 const y = d3.scaleLinear()
-    .domain([0, d3.max(artistData, d => Math.max(0, d.totalSongsLength))])
+    .domain([0, d3.max(artistData, d => Math.max(d.explicitSongsLength, d.unexplicitSongsLength))])
     .range([height, 0]);
 
 // Draw bars for explicit
@@ -104,7 +106,7 @@ svg.selectAll(".bar-explicit")
     .attr("width", x.bandwidth())
     .attr("y", d => y(d.explicitSongsLength))
     .attr("height", d => height - y(d.explicitSongsLength))
-    .attr("fill", "red");
+    .attr("fill", "#FF4E50");
 
 
 // Draw x-axis
@@ -136,5 +138,520 @@ svg.append("text")
     .style("text-anchor", "middle")
     .text("Total Number of Explicit Songs");
 
+}
+
+export function createGroupedBarChartsForTopArtists(data) {
+    // Extract relevant data
+    const artists = [...new Set(data.map(d => d.Artist))];
+    
+    // Calculate total songs length for each artist
+    const artistData = artists.map(artist => {
+        const songs = data.filter(d => d.Artist === artist);
+        const explicitSongs = songs.filter(d => d.Explicit === 'True');
+        const unexplicitSongs = songs.filter(d => d.Explicit === 'False');
+        const totalExplicitLength = explicitSongs.length > 0 ? explicitSongs.length : 0;
+        const totalUnexplicitLength = unexplicitSongs.length > 0 ? unexplicitSongs.length : 0;
+
+        return {
+            artist,
+            totalExplicitLength,
+            totalUnexplicitLength,
+        };
+    });
+
+    //console.log(artistData);
+
+    // Sort artists by 'Artist Popularity'
+    artistData.sort((a, b) => b.artistPopularity - a.artistPopularity);
+
+    // Take the top 5 artists
+    const topArtists = artistData.slice(0, 10);
+
+    //console.log(topArtists);
+
+    // Set up the dimensions of the chart
+    const margin = { top: 20, right: 30, bottom: 70, left: 60 };
+    const width = 1400 - margin.left - margin.right;
+    const height = 500 - margin.top - margin.bottom;
+
+    // Create SVG container
+    const svg = d3.select("#grouped-bar-chart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Set up scales
+    const x = d3.scaleBand()
+        .domain(topArtists.map(d => d.artist))
+        .range([0, width])
+        .padding(0.1);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(topArtists, d => Math.max(d.totalExplicitLength, d.totalUnexplicitLength))])
+        .range([height, 0]);
+
+    // Draw bars for explicit
+    svg.selectAll(".bar-explicit")
+        .data(topArtists)
+        .enter().append("rect")
+        .attr("class", "bar-explicit")
+        .attr("x", d => x(d.artist))
+        .attr("width", x.bandwidth() / 2)  // Adjust width for grouped bars
+        .attr("y", d => y(d.totalExplicitLength))
+        .attr("height", d => height - y(d.totalExplicitLength))
+        .attr("fill", "#FF4E50");
+
+    // Draw bars for unexplicit
+    svg.selectAll(".bar-unexplicit")
+        .data(topArtists)
+        .enter().append("rect")
+        .attr("class", "bar-unexplicit")
+        .attr("x", d => x(d.artist) + x.bandwidth() / 2)  // Adjust x-position for grouped bars
+        .attr("width", x.bandwidth() / 2)  // Adjust width for grouped bars
+        .attr("y", d => y(d.totalUnexplicitLength))
+        .attr("height", d => height - y(d.totalUnexplicitLength))
+        .attr("fill", "#83AF9B");
+
+    // Draw x-axis
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x))
+        .selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-45)");
+
+    // Draw y-axis
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    // Add labels
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height + margin.bottom - 10)
+        .style("text-anchor", "middle")
+        .text("Artist");
+
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", 0 - height / 2)
+        .attr("y", 0 - margin.left)
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Total Songs Length");
+}
+
+export function createLineChartForSongsOverYears(data) {
+    // Set up the dimensions of the chart
+    const margin = { top: 20, right: 30, bottom: 70, left: 60 };
+    const width = 800 - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+
+    // Create SVG container
+    const svg = d3.select("#line-chart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Extract relevant data
+    let years = [...new Set(data.map(d => d.Year))];
+    years = years.sort(); // Sort the years
+
+    // Calculate counts for explicit and non-explicit songs for each year
+    const explicitCounts = years.map(year => {
+        const explicitSongs = data.filter(d => d.Explicit === 'True' && d.Year === year);
+        return { year, count: explicitSongs.length };
+    });
+
+    const unexplicitCounts = years.map(year => {
+        const unexplicitSongs = data.filter(d => d.Explicit === 'False' && d.Year === year);
+        return { year, count: unexplicitSongs.length };
+    });
+
+    // Set up scales
+    const x = d3.scaleBand()
+        .domain(years)
+        .range([0, width])
+        .padding(0.1);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max([...explicitCounts, ...unexplicitCounts], d => d.count)])
+        .range([height, 0]);
+
+    // Draw lines for explicit songs
+    const explicitLine = d3.line()
+        .x(d => x(d.year))
+        .y(d => y(d.count));
+
+    svg.append("path")
+        .data([explicitCounts])
+        .attr("class", "line")
+        .attr("d", explicitLine)
+        .attr("fill", "none")
+        .attr("stroke", "#FF4E50");
+
+    // Draw lines for non-explicit songs
+    const unexplicitLine = d3.line()
+        .x(d => x(d.year))
+        .y(d => y(d.count));
+
+    svg.append("path")
+        .data([unexplicitCounts])
+        .attr("class", "line")
+        .attr("d", unexplicitLine)
+        .attr("fill", "none")
+        .attr("stroke", "#83AF9B");
+
+    // Draw x-axis
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x))
+        .selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-45)");
+
+    // Draw y-axis
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    // Add labels
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height + margin.bottom - 10)
+        .style("text-anchor", "middle")
+        .text("Year");
+
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", 0 - height / 2)
+        .attr("y", 0 - margin.left)
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Number of Songs");
+
+    // Add legend
+    svg.append("text")
+        .attr("x", width - 20)
+        .attr("y", 20)
+        .attr("dy", "0.32em")
+        .attr("text-anchor", "end")
+        .style("fill", "#FF4E50")
+        .text("Explicit Songs");
+
+    svg.append("text")
+        .attr("x", width - 20)
+        .attr("y", 40)
+        .attr("dy", "0.32em")
+        .attr("text-anchor", "end")
+        .style("fill", "#83AF9B")
+        .text("Non-Explicit Songs");
+}
+
+export function createLineChartForExplicitPercentageOverYears(data) {
+    // Set up the dimensions of the chart
+    const margin = { top: 20, right: 30, bottom: 70, left: 60 };
+    const width = 800 - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+
+    // Create SVG container
+    const svg = d3.select("#line-chart-popularity")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Extract relevant data
+    let years = [...new Set(data.map(d => d.Year))];
+    years = years.sort(); // Sort the years
+
+    // Calculate the total mean popularity for each year
+    const totalMeanPopularity = years.map(year => {
+        const songsInYear = data.filter(d => d.Year === year);
+        const explicitSongs = songsInYear.filter(d => d.Explicit === 'True');
+        const unexplicitSongs = songsInYear.filter(d => d.Explicit === 'False');
+        const explicitMeanPopularity = explicitSongs.length > 0 ? d3.mean(explicitSongs, d => +d.Popularity) : 0;
+        const unexplicitMeanPopularity = unexplicitSongs.length > 0 ? d3.mean(unexplicitSongs, d => +d.Popularity) : 0;
+        const meanPopularity = explicitMeanPopularity + unexplicitMeanPopularity;
+        return { year, meanPopularity, explicitMeanPopularity, unexplicitMeanPopularity };
+    });
+
+    // Calculate the mean popularity of explicit songs for each year
+    const explicitMeanPopularity = years.map(year => {
+        const explicitSongsInYear = data.filter(d => d.Explicit === 'True' && d.Year === year);
+        const meanPopularity = explicitSongsInYear.length > 0 ? d3.mean(explicitSongsInYear, d => +d.Popularity) : 0;
+        return { year, meanPopularity };
+    });
+
+    //console.log(totalMeanPopularity);
+    //console.log(explicitMeanPopularity);
+
+    // Calculate the percentage of explicit songs' popularity compared to the total mean popularity for each year
+    const percentageData = years.map(year => {
+        const totalMean = totalMeanPopularity.find(d => d.year === year).meanPopularity;
+        const explicitMean = explicitMeanPopularity.find(d => d.year === year).meanPopularity;
+        const percentage = (explicitMean / totalMean) * 100;
+        return { year, percentage };
+    });
+
+    //console.log(percentageData);
+
+    // Set up scales
+    const x = d3.scaleBand()
+        .domain(years)
+        .range([0, width])
+        .padding(0.1);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(percentageData, d => d.percentage)])
+        .range([height, 0]);
+
+    // Draw line for the percentage of explicit songs' popularity
+    const percentageLine = d3.line()
+        .x(d => x(d.year))
+        .y(d => y(d.percentage));
+
+    svg.append("path")
+        .data([percentageData])
+        .attr("class", "line")
+        .attr("d", percentageLine)
+        .attr("fill", "none")
+        .attr("stroke", "#FF4E50");
+
+    // Draw x-axis
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x))
+        .selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-45)");
+
+    // Draw y-axis
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    // Add labels
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height + margin.bottom - 10)
+        .style("text-anchor", "middle")
+        .text("Year");
+
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", 0 - height / 2)
+        .attr("y", 0 - margin.left)
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Percentage of Explicit Songs' Popularity");
+
+    // Add legend
+    svg.append("text")
+        .attr("x", width - 20)
+        .attr("y", 20)
+        .attr("dy", "0.32em")
+        .attr("text-anchor", "end")
+        .style("fill", "#FF4E50")
+        .text("Explicit Songs");
+}
+
+export function createGroupedBarChartsForFeaturesComparison(data, feature) {
+    // Extract relevant data
+    const explicitSongs = data.filter(d => d.Explicit === 'True');
+    const unexplicitSongs = data.filter(d => d.Explicit === 'False');
+
+    // Calculate mean values
+    const explicitMean = explicitSongs.length > 0 ? d3.mean(explicitSongs, d => +d[feature]) : 0;
+    const unexplicitMean = unexplicitSongs.length > 0 ? d3.mean(unexplicitSongs, d => +d[feature]) : 0;
+
+    // Set up the dimensions of the chart
+    const margin = { top: 20, right: 30, bottom: 70, left: 60 };
+    const width = 800 - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+
+    // Create SVG container
+    const svg = d3.select(`#${feature.toLowerCase()}-comparison-chart`)
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Set up scales
+    const x = d3.scaleBand()
+        .domain(["Explicit", "Non-Explicit"])
+        .range([0, width])
+        .padding(0.1);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max([explicitMean, unexplicitMean])])
+        .range([height, 0]);
+
+    // Draw bars for mean values
+    svg.selectAll(".bar")
+        .data([explicitMean, unexplicitMean])
+        .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", (d, i) => x(i === 0 ? "Explicit" : "Non-Explicit"))
+        .attr("width", x.bandwidth())
+        .attr("y", d => y(d))
+        .attr("height", d => height - y(d))
+        .attr("fill", (d, i) => (i === 0 ? "#FF4E50" : "#83AF9B"));
+
+    // Draw x-axis
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x));
+
+    // Draw y-axis
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    // Add labels
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height + margin.bottom - 10)
+        .style("text-anchor", "middle")
+        .text(feature);
+
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", 0 - height / 2)
+        .attr("y", 0 - margin.left)
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Mean Value");
+}
+
+export function createLineChartForFeatureThroughYears(data, feature) {
+    // Set up the dimensions of the chart
+    const margin = { top: 20, right: 30, bottom: 70, left: 60 };
+    const width = 800 - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+
+    // Create an SVG container
+    const svg = d3.select(`#${feature.toLowerCase()}-line-chart-through-years`)
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Extract relevant data
+    let years = [...new Set(data.map(d => d.Year))];
+    years = years.sort(); // Sort the years
+
+    // Calculate mean values for explicit and non-explicit songs for each year
+    const explicitMeans = years.map(year => {
+        const songsInYear = data.filter(d => d.Year === year && d.Explicit === 'True');
+        const mean = songsInYear.length > 0 ? d3.mean(songsInYear, d => +d[feature]) : 0;
+        return { year, mean };
+    });
+
+    
+
+    const nonExplicitMeans = years.map(year => {
+        const songsInYear = data.filter(d => d.Year === year && d.Explicit === 'False');
+        const mean = songsInYear.length > 0 ? d3.mean(songsInYear, d => +d[feature]) : 0;
+        return { year, mean };
+    });
+
+    console.log(feature);
+    console.log(explicitMeans);
+    console.log(nonExplicitMeans);
+
+    // Set up scales
+    const x = d3.scaleBand()
+        .domain(years)
+        .range([0, width])
+        .padding(0.1);
+
+    const y = feature == "Loudness" ? 
+        d3.scaleLinear()
+            .domain([d3.max([...explicitMeans, ...nonExplicitMeans], d => d.mean), d3.min([...explicitMeans, ...nonExplicitMeans], d => d.mean)])
+            .range([height, -9]) : 
+        d3.scaleLinear()
+            .domain([0, d3.max([...explicitMeans, ...nonExplicitMeans], d => d.mean)])
+            .range([height, 0]);
+
+
+    // Draw lines for explicit songs
+    const explicitLine = d3.line()
+        .x(d => x(d.year))
+        .y(d => y(d.mean));
+
+    svg.append("path")
+        .data([explicitMeans])
+        .attr("class", "line")
+        .attr("d", explicitLine)
+        .attr("fill", "none")
+        .attr("stroke", "#FF4E50");
+
+    // Draw lines for non-explicit songs
+    const nonExplicitLine = d3.line()
+        .x(d => x(d.year))
+        .y(d => y(d.mean));
+
+    svg.append("path")
+        .data([nonExplicitMeans])
+        .attr("class", "line")
+        .attr("d", nonExplicitLine)
+        .attr("fill", "none")
+        .attr("stroke", "#83AF9B");
+
+    // Draw x-axis
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x))
+        .selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-45)");
+
+    // Draw y-axis
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    // Add labels
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height + margin.bottom - 10)
+        .style("text-anchor", "middle")
+        .text("Year");
+
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", 0 - height / 2)
+        .attr("y", 0 - margin.left)
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text(`${feature} Mean Value`);
+
+    // Add legend
+    svg.append("text")
+        .attr("x", width - 20)
+        .attr("y", 20)
+        .attr("dy", "0.32em")
+        .attr("text-anchor", "end")
+        .style("fill", "#FF4E50")
+        .text("Explicit Songs");
+
+    svg.append("text")
+        .attr("x", width - 20)
+        .attr("y", 40)
+        .attr("dy", "0.32em")
+        .attr("text-anchor", "end")
+        .style("fill", "#83AF9B")
+        .text("Non-Explicit Songs");
 }
   

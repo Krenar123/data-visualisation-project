@@ -1,4 +1,7 @@
-import { createPieChart, createBarChartsForArtistsCensoredUncensoredSongs } from './functions';
+import { createPieChart, createBarChartsForArtistsCensoredSongs,
+    createGroupedBarChartsForTopArtists, createLineChartForSongsOverYears,
+    createLineChartForExplicitPercentageOverYears, createGroupedBarChartsForFeaturesComparison,
+    createLineChartForFeatureThroughYears } from './functions';
 
 d3.csv('./data/albanian_songs.csv').then(data => {
     // Extract relevant data
@@ -10,7 +13,6 @@ d3.csv('./data/albanian_songs.csv').then(data => {
     const unexplicitMeanPopularity = d3.mean(unexplicitSongs, d => +d['Popularity']);
 
     const totalMeanPopularity = explicitMeanPopularity + unexplicitMeanPopularity;
-
 
     const explicitData = [
         { label: 'Explicit', percentage: (explicitSongs.length / totalSongs) * 100 },
@@ -27,6 +29,20 @@ d3.csv('./data/albanian_songs.csv').then(data => {
     createPieChart(meanPopularityData, 'popularity-chart', 'Song Popularity');
     
     createBarChartsForArtistsCensoredSongs(data);
+    createGroupedBarChartsForTopArtists(data);
+
+    createLineChartForSongsOverYears(data);
+    createLineChartForExplicitPercentageOverYears(data);
+
+    createGroupedBarChartsForFeaturesComparison(data, 'Danceability');
+    createGroupedBarChartsForFeaturesComparison(data, 'Loudness');
+    createGroupedBarChartsForFeaturesComparison(data, 'Energy');
+    createGroupedBarChartsForFeaturesComparison(data, 'Valence');
+
+    createLineChartForFeatureThroughYears(data, 'Danceability');
+    createLineChartForFeatureThroughYears(data, 'Loudness');
+    createLineChartForFeatureThroughYears(data, 'Energy');
+    createLineChartForFeatureThroughYears(data, 'Valence');
 }).catch(error => {
     console.error('Error loading CSV:', error);
 });
