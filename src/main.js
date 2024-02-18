@@ -48,6 +48,7 @@ d3.csv('./data/albanian_songs.csv').then(data => {
 });
 
 document.addEventListener("DOMContentLoaded", function() {
+    console.log("Its not running");
     const tabs = document.querySelectorAll(".nav-link");
     const popularityCharts = document.getElementById("popularity-charts");
     const artistsCharts = document.getElementById("artists-charts");
