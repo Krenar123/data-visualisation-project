@@ -1,7 +1,7 @@
 import { createPieChart, createBarChartsForArtistsCensoredSongs,
     createGroupedBarChartsForTopArtists, createLineChartForSongsOverYears,
     createLineChartForExplicitPercentageOverYears, createGroupedBarChartsForFeaturesComparison,
-    createLineChartForFeatureThroughYears } from './functions';
+    createLineChartForFeatureThroughYears } from './functions.js';
 
 d3.csv('./data/albanian_songs.csv').then(data => {
     // Extract relevant data
